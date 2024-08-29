@@ -10,6 +10,7 @@ import {
   updateDoc,
   Timestamp,
   orderBy,
+  limit,
 } from "firebase/firestore";
 
 import { db } from "./firebaseConfigurations";
@@ -225,7 +226,7 @@ export async function updateStudentEventMapping(
       eventId
     );
     const docRef = querySnapshot.docs[0].ref;
-    await updateDoc(docRef, updatedMapping);
+    await updateDoc(docRef, { ...updatedMapping, modifiedOn: Timestamp.now() });
     console.log(
       `Student-Event mapping successfully updated for studentId ${studentId} and eventId ${eventId}`
     );
@@ -249,14 +250,25 @@ export async function getTransactions() {
   return transactions;
 }
 
-export async function addTransaction(transaction) {
+export async function addTransaction(transaction, transactionType) {
   try {
-    const docRef = await addDoc(collection(db, "transactions"), {
-      ...transaction,
-      createdOn: Timestamp.now(),
-      modifiedOn: Timestamp.now(),
-    });
-    console.log(`Transaction successfully created with id: ${docRef.id}`);
+    if (transactionType === "Ulpa's Dance Academy") {
+      const docRef = await addDoc(collection(db, "transactions"), {
+        ...transaction,
+        createdOn: Timestamp.now(),
+        modifiedOn: Timestamp.now(),
+      });
+      console.log(`Transaction successfully created with id: ${docRef.id}`);
+    } else {
+      const docRef = await addDoc(collection(db, "geethaAcademyTransactions"), {
+        ...transaction,
+        createdOn: Timestamp.now(),
+        modifiedOn: Timestamp.now(),
+      });
+      console.log(
+        `Transaction successfully created for Geetha's Academy with id: ${docRef.id}`
+      );
+    }
   } catch (e) {
     console.error(`Error creating transaction: ${e}`);
   }
@@ -294,9 +306,19 @@ export async function addPausedTransaction(
       pauseStart,
       pauseEnd
     );
-    if (pausedTransactionExists) {
+    if (!pausedTransactionExists) {
       const start = new Date(pauseStart);
       const end = new Date(pauseEnd);
+      const formattedPauseStart = new Intl.DateTimeFormat("en-US", {
+        month: "long",
+        day: "2-digit",
+        year: "numeric",
+      }).format(new Date(pauseStart));
+      const formattedPauseEnd = new Intl.DateTimeFormat("en-US", {
+        month: "long",
+        day: "2-digit",
+        year: "numeric",
+      }).format(new Date(pauseEnd));
 
       // Set dates to the first day of the month
       start.setDate(1);
@@ -308,7 +330,7 @@ export async function addPausedTransaction(
           eventId: doc(db, "events", eventId),
           amount: 0,
           status: "Paused",
-          notes: `Enrollment paused from ${pauseStart} to ${pauseEnd}`,
+          notes: `Enrollment paused from ${formattedPauseStart} to ${formattedPauseEnd}`,
           createdOn: Timestamp.fromDate(start),
           modifiedOn: Timestamp.fromDate(start),
         };
@@ -340,5 +362,187 @@ export async function deleteTransaction(transactionId) {
     console.log(`Transaction successfully deleted for id: ${transactionId}`);
   } catch (e) {
     console.error(`Error deleting transaction for id ${transactionId}: ${e}`);
+  }
+}
+
+export async function getOldestAndNewestTransactionYears() {
+  const oldestTransactionQuery = query(
+    collection(db, "transactions"),
+    orderBy("createdOn", "asc"),
+    limit(1)
+  );
+  const oldestTransactionSnapshot = await getDocs(oldestTransactionQuery);
+  const oldestTransaction = oldestTransactionSnapshot.docs[0]
+    .data()
+    .createdOn.toDate()
+    .getFullYear();
+  const newestTransactionQuery = query(
+    collection(db, "transactions"),
+    orderBy("createdOn", "desc"),
+    limit(1)
+  );
+  const newestTransactionSnapshot = await getDocs(newestTransactionQuery);
+  const newestTransaction = newestTransactionSnapshot.docs[0]
+    .data()
+    .createdOn.toDate()
+    .getFullYear();
+
+  return { oldestTransaction, newestTransaction };
+}
+
+export async function getTrasactionsForYear(year, reportType) {
+  try {
+    const startOfYear = Timestamp.fromDate(new Date(year, 0, 1));
+    const endOfYear = Timestamp.fromDate(new Date(year, 11, 31, 23, 59, 59));
+
+    const transactionQuery =
+      reportType === "Geetha's Dance Academy"
+        ? query(
+            collection(db, "geethaAcademyTransactions"),
+            where("createdOn", ">=", startOfYear),
+            where("createdOn", "<=", endOfYear)
+          )
+        : query(
+            collection(db, "transactions"),
+            where("createdOn", ">=", startOfYear),
+            where("createdOn", "<=", endOfYear)
+          );
+
+    const querySnapshot = await getDocs(transactionQuery);
+    const transactions = [];
+
+    querySnapshot.docs.map((doc) =>
+      transactions.push({ id: doc.id, ...doc.data() })
+    );
+    return transactions;
+  } catch (e) {
+    console.error(`Error fetching transactions for the year ${year}: ${e}`);
+  }
+}
+
+export async function generateReport(year, reportType) {
+  try {
+    const transactions = await getTrasactionsForYear(year, reportType);
+    const report = {};
+    const verticalTotals = Array(12).fill(0);
+    const numberOfStudents = Array(12).fill(0);
+
+    if (reportType === "Students" || reportType === "Events") {
+      const entities =
+        reportType === "Students" ? await getStudents() : await getEvents();
+      const entityMap =
+        reportType === "Students"
+          ? new Map(entities.map((student) => [student.id, student.name]))
+          : new Map(entities.map((event) => [event.id, event.eventType]));
+      let eventMap;
+
+      entities.forEach((entity) => {
+        report[entityMap.get(entity.id)] = {
+          payments: Array(12).fill(0),
+          total: 0,
+          ...(reportType === "Students" && {
+            paymentDetails: Array(12)
+              .fill(null)
+              .map(() => []),
+          }),
+        };
+      });
+
+      if (reportType === "Students") {
+        const events = await getEvents();
+        eventMap = new Map(events.map((event) => [event.id, event.eventType]));
+
+        for (const student of entities) {
+          const mappings = await getStudentEventMappingByStudentId(student.id);
+          const enrollmentMonth = student.createdOn.toDate().getMonth();
+
+          for (let month = 0; month < 12; month++) {
+            if (month < enrollmentMonth) {
+              report[entityMap.get(student.id)].payments[month] = null;
+              continue;
+            }
+          }
+
+          mappings.forEach((mapping) => {
+            const eventName = eventMap.get(mapping.eventId.id);
+            for (let month = 0; month < 12; month++)
+              report[entityMap.get(student.id)].paymentDetails[month].push({
+                eventName,
+                amount: mapping.status === "Inactive" ? null : 0,
+                status: mapping.status === "Inactive" ? "Inactive" : "Not Paid",
+                notes: "",
+              });
+          });
+        }
+      }
+
+      const filteredTransactions =
+        reportType === "Students"
+          ? transactions.filter((transaction) => transaction.studentId !== null)
+          : transactions;
+
+      filteredTransactions.forEach((transaction) => {
+        const { studentId, eventId, amount, createdOn, status, notes } =
+          transaction;
+        const entityName =
+          reportType === "Students"
+            ? entityMap.get(studentId.id)
+            : entityMap.get(eventId.id);
+        if (entityName) {
+          const monthIndex = createdOn.toDate().getMonth();
+
+          if (
+            reportType === "Students" &&
+            createdOn.toDate().getMonth() > monthIndex
+          ) {
+            report[entityName].payments[monthIndex] = null;
+            console.log(report[entityName].payments[monthIndex]);
+          }
+
+          report[entityName].payments[monthIndex] += amount;
+          report[entityName].total += amount;
+
+          if (reportType === "Students") {
+            const payDetail = report[entityName].paymentDetails[
+              monthIndex
+            ].find((item) => item.eventName === eventMap.get(eventId.id));
+            if (payDetail && payDetail.status !== "Inactive") {
+              payDetail.amount += amount;
+              payDetail.status = status;
+              payDetail.notes = notes;
+            }
+          }
+          verticalTotals[monthIndex] += amount;
+        }
+      });
+
+      // if (reportType === "Students") {
+      //   for (const student in report) {
+      //     for (let month = 0; month < 12; month++) {
+      //       const paymentDetails = report[student].paymentDetails[month];
+      //       const allInactive = paymentDetails.every(
+      //         (detail) => detail.status === "Inactive"
+      //       );
+      //       if (allInactive) report[student].payments[month] = "N/A";
+      //     }
+      //   }
+      // }
+    } else if (reportType === "Geetha's Dance Academy") {
+      transactions.forEach((transaction) => {
+        const monthIndex = transaction.transactionDate.toDate().getMonth();
+        verticalTotals[monthIndex] += transaction.amount;
+        numberOfStudents[monthIndex] += transaction.numberOfStudents || 0;
+      });
+    }
+
+    const grandTotal = verticalTotals.reduce((acc, curr) => acc + curr, 0);
+
+    return reportType === "Geetha's Dance Academy"
+      ? { report: [], numberOfStudents, verticalTotals, grandTotal }
+      : { report, verticalTotals, grandTotal };
+  } catch (e) {
+    console.error(
+      `Error generating ${reportType.toLowerCase()} report for the year ${year}: ${e}`
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import { StudentManagement } from "./components/StudentManagement";
 import { Dashboard } from "./components/Dashboard";
 import { AddStudent } from "./components/AddStudent";
@@ -8,11 +8,17 @@ import { AddEvent } from "./components/AddEvent";
 import { EditEvent } from "./components/EditEvent";
 import { TransactionManagement } from "./components/TransactionManagement";
 import { AddTransaction } from "./components/AddTransaction";
+import { Reports } from "./components/Reports";
 
 function App() {
   return (
     <Router>
       <div className="app">
+        <div className="navbar shadow">
+          <Link className="no-underline" to={"/"}>
+            <p>Dance Fee Track</p>
+          </Link>
+        </div>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/students" element={<StudentManagement />} />
@@ -23,6 +29,7 @@ function App() {
           <Route path="/events/edit/:id" element={<EditEvent />} />
           <Route path="/transactions" element={<TransactionManagement />} />
           <Route path="/transactions/add" element={<AddTransaction />} />
+          <Route path="/reports" element={<Reports />} />
         </Routes>
       </div>
     </Router>

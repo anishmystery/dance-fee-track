@@ -8,6 +8,8 @@ import {
 } from "../firestoreServices";
 import { Link } from "react-router-dom";
 import { ConfirmationModal } from "./ConfirmationModal";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
 
 export function StudentManagement() {
   const [studentList, setStudentList] = useState([]);
@@ -50,10 +52,14 @@ export function StudentManagement() {
 
   return (
     <div className="container">
-      <h1>Student Management</h1>
-      <Link to="/students/add">
-        <button>Add Student</button>
-      </Link>
+      <h2>Students</h2>
+      <div className="action-btns">
+        <Link to="/students/add">
+          <Button variant="contained" startIcon={<AddIcon></AddIcon>}>
+            Add Student
+          </Button>
+        </Link>
+      </div>
       <StudentList studentList={studentList} onDelete={handleOnDelete} />
       <ConfirmationModal
         isOpen={isModalOpen}

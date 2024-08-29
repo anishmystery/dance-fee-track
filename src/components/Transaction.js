@@ -1,3 +1,4 @@
+import { Alert, Chip } from "@mui/material";
 import { getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
@@ -7,9 +8,11 @@ export function Transaction({ transaction, onDelete }) {
 
   useEffect(() => {
     const fetchStudentEventDetailsFromTransaction = async () => {
-      const studentRef = transaction.studentId;
-      const studentDoc = await getDoc(studentRef);
-      setStudentName(studentDoc.data().name);
+      if (transaction.studentId) {
+        const studentRef = transaction.studentId;
+        const studentDoc = await getDoc(studentRef);
+        setStudentName(studentDoc.data().name);
+      } else setStudentName("");
       const eventRef = transaction.eventId;
       const eventDoc = await getDoc(eventRef);
       setEventType(eventDoc.data().eventType);
@@ -17,49 +20,53 @@ export function Transaction({ transaction, onDelete }) {
     fetchStudentEventDetailsFromTransaction();
   }, [transaction]);
   return (
-    <div className="card-view" key={transaction.id}>
+    <div className="card-view shadow" key={transaction.id}>
       <div className="card-content">
         <div className="card-data">
-          <p>
-            <strong>Student Name: </strong>
-            {studentName}
-          </p>
-          <p>
-            <strong>Event Type: </strong>
-            {eventType}
-          </p>
-          <p>
-            <strong>Amount: </strong>${transaction.amount}
-          </p>
-          <p>
-            <strong>Status: </strong>
+          <p>{studentName}</p>
+          <Chip
+            label={eventType}
+            variant="outlined"
+            color="primary"
+            size="small"
+            sx={{ margin: "0 0 10px 0" }}
+          ></Chip>
+          <p
+            className={
+              transaction.status === "Paid"
+                ? "paid"
+                : transaction.status === "Paused"
+                ? "paused"
+                : "waived-off"
+            }
+          >
             {transaction.status}
           </p>
           <p>
-            <strong>Transaction Date: </strong>
-            {transaction.createdOn.toDate().toLocaleString()}
-          </p>
-          <p>
-            {transaction.notes ? (
-              <>
-                <strong>Notes: </strong>
-                {transaction.notes}
-              </>
-            ) : null}
+            {new Intl.DateTimeFormat("en-US", {
+              month: "long",
+              day: "2-digit",
+              year: "numeric",
+            }).format(transaction.createdOn.toDate())}
           </p>
         </div>
-        <i onClick={() => onDelete(transaction)}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="16px"
-            viewBox="0 -960 960 960"
-            width="16px"
-            fill="#000"
-          >
-            <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
-          </svg>
-        </i>
+        <strong>${transaction.amount}</strong>
       </div>
+      {transaction.notes ? (
+        <Alert
+          severity="info"
+          color={
+            transaction.status === "Paid"
+              ? "success"
+              : transaction.status === "Paused"
+              ? "warning"
+              : "info"
+          }
+          sx={{ marginTop: "10px" }}
+        >
+          {transaction.notes}
+        </Alert>
+      ) : null}
     </div>
   );
 }

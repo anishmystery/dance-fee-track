@@ -8,6 +8,8 @@ import {
 import { Link } from "react-router-dom";
 import { EventList } from "./EventList";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 
 export function EventManagement() {
   const [eventList, setEventList] = useState([]);
@@ -48,10 +50,14 @@ export function EventManagement() {
 
   return (
     <div className="container">
-      <h1>Event Management</h1>
-      <Link to="/events/add">
-        <button>Add Event</button>
-      </Link>
+      <h2>Events</h2>
+      <div className="action-btns">
+        <Link to="/events/add">
+          <Button variant="contained" startIcon={<AddIcon></AddIcon>}>
+            Add Event
+          </Button>
+        </Link>
+      </div>
       <EventList eventList={eventList} onDelete={handleOnDelete} />
       <ConfirmationModal
         isOpen={isModalOpen}

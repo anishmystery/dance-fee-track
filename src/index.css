@@ -12,25 +12,104 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.container {
-  overflow-y: scroll;
+.shadow {
+  box-shadow: 0 4px 8px rgb(0, 0, 0, 0.4);
+}
+
+.navbar {
+  text-align: center;
+  padding: 20px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
   padding: 10px;
+  gap: 10px;
+  justify-content: space-evenly;
+}
+
+.no-underline {
+  text-decoration: none;
+  color: black;
+}
+
+.nav-button {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  border-radius: 5px;
+  gap: 20px;
+}
+
+.container {
+  margin-top: 10px;
+}
+
+.container h2 {
+  padding: 10px;
+}
+
+.container hr {
+  margin: 0 10px 10px 10px;
+  /* border: 0.1px solid black; */
+}
+
+.student-details {
+  padding: 0px 10px 10px 10px;
+  line-height: 32px;
+}
+
+.event-details {
+  padding: 0px 10px 10px 10px;
+}
+
+.edit-student {
+  display: flex;
+  padding-right: 10px;
+  align-items: center;
+  gap: 5px;
+  justify-content: space-between;
+}
+
+.action-btns {
+  padding: 10px;
+}
+
+.list-view {
+  /* overflow-y: scroll; */
+  padding: 10px;
+}
+
+.custom-btn {
+  background-color: #ff5a5e;
 }
 
 .form {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  padding: 0 10px 0 10px;
 }
 
-.form input,
-select {
-  margin-bottom: 10px;
+.contact-numbers {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .card-view {
-  margin-top: 20px;
   padding: 10px;
-  border: 1px solid black;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.card-view:first-child {
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
 }
 
 .card-content {
@@ -40,6 +119,40 @@ select {
 
 .card-data {
   flex: 1;
+}
+
+.card-data p:first-child {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.card-data p {
+  font-size: 14px;
+}
+
+.card-data p:last-child {
+  margin-top: 10px;
+}
+
+.paid {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.paused {
+  color: #ffa726;
+  font-weight: bold;
+}
+
+.waived-off {
+  color: #1976d2;
+  font-weight: bold;
+}
+
+.not-paid {
+  color: #f44336;
+  font-weight: bold;
 }
 
 .modal-overlay {
@@ -63,4 +176,9 @@ select {
 
 .modal button {
   margin: 5px;
+}
+
+.reports {
+  padding: 10px;
+  margin-top: 30px;
 }

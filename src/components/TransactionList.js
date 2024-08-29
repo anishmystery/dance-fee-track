@@ -2,8 +2,7 @@ import { Transaction } from "./Transaction";
 
 export function TransactionList({ transactionList, onDelete }) {
   return (
-    <>
-      <h1>Transaction List</h1>
+    <div className="list-view">
       {transactionList.map((transaction) => (
         <Transaction
           key={transaction.id}
@@ -11,6 +10,6 @@ export function TransactionList({ transactionList, onDelete }) {
           onDelete={onDelete}
         />
       ))}
-    </>
+    </div>
   );
 }
