@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { StudentManagement } from "./components/StudentManagement";
 import { Dashboard } from "./components/Dashboard";
 import { AddStudent } from "./components/AddStudent";
@@ -9,29 +9,103 @@ import { EditEvent } from "./components/EditEvent";
 import { TransactionManagement } from "./components/TransactionManagement";
 import { AddTransaction } from "./components/AddTransaction";
 import { Reports } from "./components/Reports";
+import { AuthProvider } from "./AuthContext";
+import { Login } from "./components/Login";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Navbar } from "./components/Navbar";
 
 function App() {
   return (
     <Router>
-      <div className="app">
-        <div className="navbar shadow">
-          <Link className="no-underline" to={"/"}>
-            <p>Dance Fee Track</p>
-          </Link>
+      <AuthProvider>
+        <div className="app">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute>
+                  <StudentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/add"
+              element={
+                <ProtectedRoute>
+                  <AddStudent />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <EditStudent />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/events"
+              element={
+                <ProtectedRoute>
+                  <EventManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/events/add"
+              element={
+                <ProtectedRoute>
+                  <AddEvent />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/events/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <EditEvent />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <ProtectedRoute>
+                  <TransactionManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transactions/add"
+              element={
+                <ProtectedRoute>
+                  <AddTransaction />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </div>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/students" element={<StudentManagement />} />
-          <Route path="/students/add" element={<AddStudent />} />
-          <Route path="/students/edit/:id" element={<EditStudent />} />
-          <Route path="/events" element={<EventManagement />} />
-          <Route path="/events/add" element={<AddEvent />} />
-          <Route path="/events/edit/:id" element={<EditEvent />} />
-          <Route path="/transactions" element={<TransactionManagement />} />
-          <Route path="/transactions/add" element={<AddTransaction />} />
-          <Route path="/reports" element={<Reports />} />
-        </Routes>
-      </div>
+      </AuthProvider>
     </Router>
   );
 }

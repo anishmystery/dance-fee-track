@@ -84,6 +84,7 @@ export function EditStudent() {
           formattedPauseStart,
           formattedPauseEnd,
           enrollmentDate: mapping.createdOn,
+          inactiveDate: mapping.inactiveDate,
         });
       }
       setEventList(events);
@@ -291,6 +292,7 @@ export function EditStudent() {
             event.status === "Paused" && event.formattedPauseEnd
               ? Timestamp.fromDate(new Date(event.formattedPauseEnd))
               : "",
+          inactiveDate: event.status === "Inactive" ? Timestamp.now() : "",
         };
         await updateStudentEventMapping(id, event.id, updatedMapping);
         if (event.status === "Paused") {
@@ -421,6 +423,16 @@ export function EditStudent() {
                           day: "2-digit",
                           year: "numeric",
                         }).format(event.pauseEnd.toDate())}
+                      </p>
+                    ) : null}
+                    {event.status === "Inactive" ? (
+                      <p>
+                        Inactive since{" "}
+                        {new Intl.DateTimeFormat("en-US", {
+                          month: "long",
+                          day: "2-digit",
+                          year: "numeric",
+                        }).format(event.inactiveDate.toDate())}{" "}
                       </p>
                     ) : null}
                   </div>

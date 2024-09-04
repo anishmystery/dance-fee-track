@@ -12,7 +12,6 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-
 import { db } from "./firebaseConfigurations";
 
 export async function getStudents() {
@@ -148,6 +147,7 @@ export async function getStudentEventMappingByStudentId(studentId) {
     const mappingQuery = query(
       collection(db, "studentsEventsMapping"),
       where("studentId", "==", studentRef)
+      // where("status", "==", "Active")
     );
     const querySnapshot = await getDocs(mappingQuery);
     const mappings = [];
@@ -167,7 +167,8 @@ export async function getStudentEventMappingByEventId(eventId) {
     const eventRef = doc(db, "events", eventId);
     const mappingQuery = query(
       collection(db, "studentsEventsMapping"),
-      where("eventId", "==", eventRef)
+      where("eventId", "==", eventRef),
+      where("status", "==", "Active")
     );
     const querySnapshot = await getDocs(mappingQuery);
     const mappings = [];
@@ -465,13 +466,25 @@ export async function generateReport(year, reportType) {
 
           mappings.forEach((mapping) => {
             const eventName = eventMap.get(mapping.eventId.id);
+            const inactiveDateMonth = mapping.inactiveDate
+              ? mapping.inactiveDate.toDate().getMonth()
+              : null;
             for (let month = 0; month < 12; month++)
-              report[entityMap.get(student.id)].paymentDetails[month].push({
-                eventName,
-                amount: mapping.status === "Inactive" ? null : 0,
-                status: mapping.status === "Inactive" ? "Inactive" : "Not Paid",
-                notes: "",
-              });
+              if (inactiveDateMonth !== null && month >= inactiveDateMonth) {
+                report[entityMap.get(student.id)].payments[month] = NaN;
+                report[entityMap.get(student.id)].paymentDetails[month].push({
+                  eventName,
+                  amount: NaN,
+                  status: "Inactive",
+                  notes: "",
+                });
+              } else
+                report[entityMap.get(student.id)].paymentDetails[month].push({
+                  eventName,
+                  amount: 0,
+                  status: "Not Paid",
+                  notes: "",
+                });
           });
         }
       }

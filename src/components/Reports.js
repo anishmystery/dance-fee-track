@@ -218,7 +218,11 @@ function Report({ reportData, reportType, year }) {
                       }
                       style={amount === null ? {} : { cursor: "pointer" }}
                     >
-                      {amount === null ? "N/A" : `$${amount}`}
+                      {amount === null
+                        ? "-"
+                        : isNaN(amount)
+                        ? "N/A"
+                        : `$${amount}`}
                     </TableCell>
                   ))}
                   <TableCell>
@@ -286,7 +290,7 @@ function Report({ reportData, reportType, year }) {
                 <DialogContentText key={i}>
                   <strong>Event:</strong> {detail.eventName} <br />
                   <strong>Amount:</strong>{" "}
-                  {detail.amount === null ? "N/A" : `$${detail.amount}`} <br />
+                  {isNaN(detail.amount) ? "N/A" : `$${detail.amount}`} <br />
                   <strong>Status:</strong>{" "}
                   <span
                     className={

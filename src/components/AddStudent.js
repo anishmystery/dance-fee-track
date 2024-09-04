@@ -153,6 +153,7 @@ export function AddStudent() {
         feeAmount,
         pauseStart: "",
         pauseEnd: "",
+        inactiveDate: "",
       };
       await addStudentEventMapping(mapping);
     }
