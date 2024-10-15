@@ -47,6 +47,7 @@ function UlpasDanceAcademy({ transactionType }) {
   const [eventList, setEventList] = useState([]);
   const [eventId, setEventId] = useState("");
   const [amount, setAmount] = useState("");
+  const [transactionDate, setTransactionDate] = useState("");
   const [isWaivedOff, setIsWaivedOff] = useState(false);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState({});
@@ -118,6 +119,15 @@ function UlpasDanceAcademy({ transactionType }) {
       setErrors((errors) => ({ ...errors, amountRequired: undefined }));
   }
 
+  function handleChangeTransactionDate(e) {
+    setTransactionDate(e.target.value);
+    if (e.target.value)
+      setErrors((errors) => ({
+        ...errors,
+        transactionDateRequired: undefined,
+      }));
+  }
+
   function handleToggleWaivedOff(e) {
     const isChecked = e.target.checked;
     setIsWaivedOff(isChecked);
@@ -156,6 +166,14 @@ function UlpasDanceAcademy({ transactionType }) {
       }));
   }
 
+  function handleBlurTransactionDate(e) {
+    if (!e.target.value)
+      setErrors((errors) => ({
+        ...errors,
+        transactionDateRequired: "Transaction date is required",
+      }));
+  }
+
   async function handleAddTransaction(transaction, transactionType) {
     await addTransaction(transaction, transactionType);
     navigate("/transactions");
@@ -167,6 +185,8 @@ function UlpasDanceAcademy({ transactionType }) {
       newErrors.studentRequired = "Student is required";
     if (!eventId) newErrors.eventRequired = "Event is required";
     if (!amount) newErrors.amountRequired = "Amount is required";
+    if (!transactionDate)
+      newErrors.transactionDateRequired = "Transaction date is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -180,6 +200,7 @@ function UlpasDanceAcademy({ transactionType }) {
       studentId: studentId ? doc(db, "students", studentId) : null,
       eventId: doc(db, "events", eventId),
       amount: Number(amount),
+      transactionDate: Timestamp.fromDate(new Date(transactionDate)),
       status: isWaivedOff ? "Waived Off" : "Paid",
       notes,
     };
@@ -262,6 +283,23 @@ function UlpasDanceAcademy({ transactionType }) {
         {errors.amountRequired && (
           <FormHelperText>{errors.amountRequired}</FormHelperText>
         )}
+      </FormControl>
+      <FormControl size="small" fullWidth margin="normal">
+        <InputLabel shrink htmlFor="transaction-date-label">
+          Transaction Date
+        </InputLabel>
+        <TextField
+          variant="outlined"
+          id="transaction-date-label"
+          label="Transaction Date"
+          type="date"
+          value={transactionDate}
+          onChange={handleChangeTransactionDate}
+          onBlur={handleBlurTransactionDate}
+          InputLabelProps={{ shrink: true }}
+          helperText={errors.transactionDateRequired}
+          error={!!errors.transactionDateRequired}
+        ></TextField>
       </FormControl>
       <FormGroup>
         <FormControlLabel

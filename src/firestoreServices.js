@@ -332,6 +332,7 @@ export async function addPausedTransaction(
           amount: 0,
           status: "Paused",
           notes: `Enrollment paused from ${formattedPauseStart} to ${formattedPauseEnd}`,
+          transactionDate: Timestamp.fromDate(start),
           createdOn: Timestamp.fromDate(start),
           modifiedOn: Timestamp.fromDate(start),
         };
@@ -369,23 +370,23 @@ export async function deleteTransaction(transactionId) {
 export async function getOldestAndNewestTransactionYears() {
   const oldestTransactionQuery = query(
     collection(db, "transactions"),
-    orderBy("createdOn", "asc"),
+    orderBy("transactionDate", "asc"),
     limit(1)
   );
   const oldestTransactionSnapshot = await getDocs(oldestTransactionQuery);
   const oldestTransaction = oldestTransactionSnapshot.docs[0]
     .data()
-    .createdOn.toDate()
+    .transactionDate.toDate()
     .getFullYear();
   const newestTransactionQuery = query(
     collection(db, "transactions"),
-    orderBy("createdOn", "desc"),
+    orderBy("transactionDate", "desc"),
     limit(1)
   );
   const newestTransactionSnapshot = await getDocs(newestTransactionQuery);
   const newestTransaction = newestTransactionSnapshot.docs[0]
     .data()
-    .createdOn.toDate()
+    .transactionDate.toDate()
     .getFullYear();
 
   return { oldestTransaction, newestTransaction };
@@ -400,13 +401,13 @@ export async function getTrasactionsForYear(year, reportType) {
       reportType === "Geetha's Dance Academy"
         ? query(
             collection(db, "geethaAcademyTransactions"),
-            where("createdOn", ">=", startOfYear),
-            where("createdOn", "<=", endOfYear)
+            where("transactionDate", ">=", startOfYear),
+            where("transactionDate", "<=", endOfYear)
           )
         : query(
             collection(db, "transactions"),
-            where("createdOn", ">=", startOfYear),
-            where("createdOn", "<=", endOfYear)
+            where("transactionDate", ">=", startOfYear),
+            where("transactionDate", "<=", endOfYear)
           );
 
     const querySnapshot = await getDocs(transactionQuery);
@@ -427,6 +428,8 @@ export async function generateReport(year, reportType) {
     const report = {};
     const verticalTotals = Array(12).fill(0);
     const numberOfStudents = Array(12).fill(0);
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
 
     if (reportType === "Students" || reportType === "Events") {
       const entities =
@@ -456,11 +459,21 @@ export async function generateReport(year, reportType) {
         for (const student of entities) {
           const mappings = await getStudentEventMappingByStudentId(student.id);
           const enrollmentMonth = student.createdOn.toDate().getMonth();
+          const enrollmentYear = student.createdOn.toDate().getFullYear();
+
+          if (enrollmentYear > year) {
+            // Set payments for all months to null if the student was not enrolled in the report year
+            report[entityMap.get(student.id)].payments.fill(null);
+            continue;
+          }
 
           for (let month = 0; month < 12; month++) {
-            if (month < enrollmentMonth) {
+            if (year === enrollmentYear && month < enrollmentMonth) {
               report[entityMap.get(student.id)].payments[month] = null;
               continue;
+            }
+            if (year === currentYear && month > currentMonth) {
+              report[entityMap.get(student.id)].payments[month] = null;
             }
           }
 
@@ -489,27 +502,38 @@ export async function generateReport(year, reportType) {
         }
       }
 
+      if (reportType === "Events") {
+        for (const event of entities) {
+          // Handle future months for the current year
+          for (let month = 0; month < 12; month++) {
+            if (year === currentYear && month > currentMonth) {
+              report[entityMap.get(event.id)].payments[month] = null;
+              continue;
+            }
+          }
+        }
+      }
+
       const filteredTransactions =
         reportType === "Students"
           ? transactions.filter((transaction) => transaction.studentId !== null)
           : transactions;
 
       filteredTransactions.forEach((transaction) => {
-        const { studentId, eventId, amount, createdOn, status, notes } =
+        const { studentId, eventId, amount, transactionDate, status, notes } =
           transaction;
         const entityName =
           reportType === "Students"
             ? entityMap.get(studentId.id)
             : entityMap.get(eventId.id);
         if (entityName) {
-          const monthIndex = createdOn.toDate().getMonth();
+          const monthIndex = transactionDate.toDate().getMonth();
 
           if (
             reportType === "Students" &&
-            createdOn.toDate().getMonth() > monthIndex
+            transactionDate.toDate().getMonth() > monthIndex
           ) {
             report[entityName].payments[monthIndex] = null;
-            console.log(report[entityName].payments[monthIndex]);
           }
 
           report[entityName].payments[monthIndex] += amount;

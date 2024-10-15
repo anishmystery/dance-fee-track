@@ -164,7 +164,6 @@ export function AddStudent() {
     const contactNumberRegex = /^\(\d{3}\)-\d{3}-\d{4}$/;
     const newErrors = {};
     if (!name) newErrors.nameRequired = "Student Name is required";
-    console.log(eventIds.length);
     if (eventIds.length === 0)
       newErrors.eventRequired = "At least 1 event is required";
     if (contactNumbers.filter(Boolean).length === 0)

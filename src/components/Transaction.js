@@ -47,7 +47,7 @@ export function Transaction({ transaction, onDelete }) {
               month: "long",
               day: "2-digit",
               year: "numeric",
-            }).format(transaction.createdOn.toDate())}
+            }).format(transaction.transactionDate.toDate())}
           </p>
         </div>
         <strong>${transaction.amount}</strong>

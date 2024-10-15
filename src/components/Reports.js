@@ -237,7 +237,9 @@ function Report({ reportData, reportType, year }) {
                     {eventName}
                   </TableCell>
                   {data.payments.map((amount, i) => (
-                    <TableCell key={i}>${amount}</TableCell>
+                    <TableCell key={i}>
+                      {amount === null ? "-" : `$${amount}`}
+                    </TableCell>
                   ))}
                   <TableCell>
                     <strong>${data.total}</strong>
