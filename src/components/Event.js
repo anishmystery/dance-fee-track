@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import EditIcon from "@mui/icons-material/Edit";
+// import { Link } from "react-router-dom";
+// import EditIcon from "@mui/icons-material/Edit";
 
 export function Event({ event, onDelete }) {
   return (
@@ -9,9 +9,9 @@ export function Event({ event, onDelete }) {
           <p>{event.eventType}</p>
           <p>Base Fee: ${event.baseFee}</p>
         </div>
-        <Link to={`/events/edit/${event.id}`}>
+        {/* <Link to={`/events/edit/${event.id}`}>
           <EditIcon fontSize="small" sx={{ color: "black" }}></EditIcon>
-        </Link>
+        </Link> */}
         {/* <i onClick={() => onDelete(event)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
