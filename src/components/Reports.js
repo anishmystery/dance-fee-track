@@ -15,6 +15,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress,
+  Box,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
@@ -28,6 +30,7 @@ export function Reports() {
   const [reportType, setReportBy] = useState("");
   const [report, setReport] = useState({});
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchYears = async () => {
@@ -45,8 +48,10 @@ export function Reports() {
   useEffect(() => {
     const fetchReport = async () => {
       if (selectedYear && reportType) {
+        setLoading(true);
         const reportData = await generateReport(selectedYear, reportType);
         setReport(reportData);
+        setLoading(false);
       }
     };
     fetchReport();
@@ -132,12 +137,26 @@ export function Reports() {
           )}
         </FormControl>
       </form>
-      {Object.keys(report).length !== 0 && (
-        <Report
-          reportData={report}
-          reportType={reportType}
-          year={selectedYear}
-        />
+      {loading ? (
+        <Box
+          sx={{
+            padding: "16px",
+            marginTop: "16px",
+            display: "flex",
+            justifyContent: "center",
+            alignContent: "center",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        Object.keys(report).length !== 0 && (
+          <Report
+            reportData={report}
+            reportType={reportType}
+            year={selectedYear}
+          />
+        )
       )}
     </div>
   );

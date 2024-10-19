@@ -482,8 +482,15 @@ export async function generateReport(year, reportType) {
             const inactiveDateMonth = mapping.inactiveDate
               ? mapping.inactiveDate.toDate().getMonth()
               : null;
+            const inactiveDateYear = mapping.inactiveDate
+              ? mapping.inactiveDate.toDate().getFullYear()
+              : null;
             for (let month = 0; month < 12; month++)
-              if (inactiveDateMonth !== null && month >= inactiveDateMonth) {
+              if (
+                inactiveDateYear === year &&
+                inactiveDateMonth !== null &&
+                month >= inactiveDateMonth
+              ) {
                 report[entityMap.get(student.id)].payments[month] = NaN;
                 report[entityMap.get(student.id)].paymentDetails[month].push({
                   eventName,
